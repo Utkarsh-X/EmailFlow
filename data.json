@@ -1,1 +1,19 @@
-{"var4dpi": "300", "v2": "", "v3": "", "theme_color": "", "theme_color16": "", "theme_color2": "", "theme_colorh": "", "switch_v_pass1": "off", "list1": [""], "switch_v_date1": "on", "switch_v_sub1": "on", "switch_v_img1": "on", "switch_v_del11": "on", "addre1": "", "recname1": ""}
+{
+    "var4dpi": "300",
+    "v2": "",
+    "v3": "",
+    "theme_color": "",
+    "theme_color16": "",
+    "theme_color2": "",
+    "theme_colorh": "",
+    "switch_v_pass1": "off",
+    "list1": [
+        ""
+    ],
+    "switch_v_date1": "on",
+    "switch_v_sub1": "on",
+    "switch_v_img1": "off",
+    "switch_v_del11": "on",
+    "addre1": "",
+    "recname1": ""
+}

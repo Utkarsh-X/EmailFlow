@@ -10,12 +10,13 @@ It handles:
 - File selection and conversion UI
 - Integration with the logic layer (advmail.py)
 
-Designed for simplicity, speed, and user customization.\n
+Designed for simplicity, speed, and user customization.
 For more detail visit https://github.com/Utkarsh-X/EmailFlow
 """
 
 # === Standard Library ===
 import os
+import sys
 import json
 import threading
 import warnings
@@ -35,8 +36,22 @@ from version import __version__
 
 print(f"Version: {__version__}")
 
+
+# Dynamically get the path to data.json for .py and .exe
+def get_data_path():
+    if getattr(sys, "frozen", False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, "data.json")
+
+
+# Load default values into globals
 def var_load():
-    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh, switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11, addre1, recname1
+    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh
+    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11
+    global addre1, recname1
+
     var4dpi = "300"
     v2 = ""
     v3 = ""
@@ -48,23 +63,24 @@ def var_load():
     list1 = [""]
     switch_v_date1 = "on"
     switch_v_sub1 = "on"
-    switch_v_img1 = "on"
+    switch_v_img1 = "off"
     switch_v_del11 = "on"
     addre1 = ""
     recname1 = ""
 
 
-var_load()
+# Load variable values from data.json
+def load_variables():
 
-
-def load_variables(filename):
-    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh, switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11, addre1, recname1
+    filename = get_data_path()
+    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh
+    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11
+    global addre1, recname1
 
     try:
-        with open(filename, "r") as file:  # Open the file in read mode
-            data = json.load(file)  # Load data from JSON format
-
-            var4dpi = data.get("var4dpi", var4dpi)  # Use current value if key not found
+        with open(filename, "r") as file:
+            data = json.load(file)
+            var4dpi = data.get("var4dpi", var4dpi)
             v2 = data.get("v2", v2)
             v3 = data.get("v3", v3)
             theme_color = data.get("theme_color", theme_color)
@@ -73,7 +89,6 @@ def load_variables(filename):
             theme_colorh = data.get("theme_colorh", theme_colorh)
             switch_v_pass1 = data.get("switch_v_pass1", switch_v_pass1)
             list1 = data.get("list1", list1)
-
             switch_v_date1 = data.get("switch_v_date1", switch_v_date1)
             switch_v_sub1 = data.get("switch_v_sub1", switch_v_sub1)
             switch_v_img1 = data.get("switch_v_img1", switch_v_img1)
@@ -86,11 +101,16 @@ def load_variables(filename):
         print(f"Error decoding JSON from {filename}. Using default values.")
 
 
-# Function to update multiple variables at once
-def update_variables(updates):
-    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh, switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11, addre1, recname1
+var_load()  # First set defaults
+load_variables()  # Load saved settings from data.json
 
-    # Update the variables based on the updates dictionary
+
+# Update specific global variables from a dictionary
+def update_variables(updates):
+    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh
+    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11
+    global addre1, recname1
+
     if "var4dpi" in updates:
         var4dpi = updates["var4dpi"]
     if "v2" in updates:
@@ -123,7 +143,7 @@ def update_variables(updates):
         recname1 = updates["recname1"]
 
 
-# Function to gather all data into a dictionary
+# Convert current state to dictionary
 def data_to_save():
     return {
         "var4dpi": var4dpi,
@@ -144,13 +164,21 @@ def data_to_save():
     }
 
 
-# Function to save variables
-def save_variables(filename, data):
+# Save data to data.json
+def save_variables():
+    filename = get_data_path()
     with open(filename, "w") as file:
-        json.dump(data, file)
+        json.dump(data_to_save(), file, indent=4)
 
 
-load_variables("data.json")
+def resource_path(relative_path: str) -> str:
+    try:
+        base_path = sys._MEIPASS  # PyInstaller bundles files here at runtime
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
 customtkinter.set_appearance_mode("light")
 customtkinter.set_default_color_theme("green")
 root = customtkinter.CTk()
@@ -164,7 +192,7 @@ y = (screen_height / 2) - (app_height / 1.85)
 root.geometry(f"{app_width}x{app_height}+{int(x)}+{int(y)}")
 root.title("EmailFlow Manager")
 root.resizable(False, False)
-root.iconbitmap("emailB.ico")
+root.iconbitmap(resource_path(os.path.join("assets", "emailB.ico")))
 
 
 def apply1():
@@ -187,7 +215,7 @@ def apply1():
 
         # Update and save variables
         update_variables({"var4dpi": var4dpi})
-        save_variables("data.json", data_to_save())
+        save_variables()
 
     except ValueError as e:
         CTkMessagebox.CTkMessagebox(title="Error", message=str(e), option_1="Ok")
@@ -200,7 +228,7 @@ def choose_color_button():
     if color_code:
         theme_color = color_code
         update_variables(theme_color)
-        save_variables("data.json", data_to_save())
+        save_variables()
         choose_color_button_load(theme_color)
 
 
@@ -210,6 +238,7 @@ def choose_color_button_load(theme_color):
         menu_button,
         bs1,
         menu_button_p1,
+        menu_button_p2,
         menu_button1,
         menu_item1,
         menu_item2,
@@ -236,7 +265,7 @@ def choose_color_button16():
     if color_code1:
         theme_color16 = color_code1
         update_variables(theme_color16)
-        save_variables("data.json", data_to_save())
+        save_variables()
         choose_color_button16_load(theme_color16)
 
 
@@ -253,7 +282,7 @@ def choose_color_menu15():
     if color_code2:
         theme_color2 = color_code2
         update_variables(theme_color2)
-        save_variables("data.json", data_to_save())
+        save_variables()
         choose_color_menu15_load(theme_color2)
 
 
@@ -267,7 +296,7 @@ def choose_color_hover():
     if color_code1:
         theme_colorh = color_code1
         update_variables(theme_colorh)
-        save_variables("data.json", data_to_save())
+        save_variables()
         choose_color_hover_load(theme_colorh)
 
 
@@ -281,6 +310,7 @@ def choose_color_hover_load(theme_colorh):
         menu_button,
         menu_button1,
         menu_button_p1,
+        menu_button_p2,
         menu_item1,
         menu_item2,
         menu_item3,
@@ -318,7 +348,7 @@ def default_color():
         }
     )
 
-    save_variables("data.json", data_to_save())
+    save_variables()
     CTkMessagebox.CTkMessagebox(
         title="Reload Needed!",
         message="Please reload the application to see changes.\n",
@@ -369,13 +399,14 @@ def changetheme():
         customtkinter.set_appearance_mode("light")
         mode = "light"
         b5.configure(image=imaphoto2)
-        root.iconbitmap("emailB.ico")
+        root.iconbitmap(resource_path(os.path.join("assets", "emailB.ico")))
         link_label.configure(text_color="blue")
     else:
         customtkinter.set_appearance_mode("dark")
         mode = "dark"
         b5.configure(image=imaphoto1)
-        root.iconbitmap("emailL.ico")
+        root.iconbitmap(resource_path(os.path.join("assets", "emailL.ico")))
+
         link_label.configure(text_color="lightblue")
 
 
@@ -436,10 +467,15 @@ def getcombo(choice):
 warnings.simplefilter("ignore", category=DeprecationWarning)
 
 imaphoto1 = ImageTk.PhotoImage(
-    Image.open("clicktolight.png").resize((21, 21), Image.ANTIALIAS)
+    Image.open(resource_path(os.path.join("assets", "clicktolight.png"))).resize(
+        (21, 21), Image.ANTIALIAS
+    )
 )
+
 imaphoto2 = ImageTk.PhotoImage(
-    Image.open("clicktodark.png").resize((21, 21), Image.ANTIALIAS)
+    Image.open(resource_path(os.path.join("assets", "clicktodark.png"))).resize(
+        (21, 21), Image.ANTIALIAS
+    )
 )
 
 mode = "light"
@@ -595,7 +631,7 @@ def reset_app_settings():
     ]:
         update_variables(var)
 
-    save_variables("data.json", data_to_save())
+    save_variables()
     combox1.set("")
     combox1.configure(values=[""])
     entrybox2.delete(0, "end")
@@ -769,7 +805,7 @@ def input():
     if val22 != "":
         list1 = list1 + [val22]
         update_variables(list1)
-        save_variables("data.json", data_to_save())
+        save_variables()
         combox1.configure(values=list1)
 
 
@@ -786,7 +822,7 @@ def del_user():
         list2 = [x for x in list1 if x != selected_value]
         list1 = list2
         update_variables(list1)
-        save_variables("data.json", data_to_save())
+        save_variables()
         combox1.configure(values=list1)
         combox1.set(list1[0])
 
@@ -826,7 +862,7 @@ def input2():
     dialog2 = customtkinter.CTkInputDialog(text="Enter the Password Below")
     v2 = dialog2.get_input()
     update_variables(v2)
-    save_variables("data.json", data_to_save())
+    save_variables()
     # Update the text of the b2
 
     ads = "*" * len(v2)
@@ -863,7 +899,7 @@ def input3():
     dialog3 = customtkinter.CTkInputDialog(text="Enter Sender/Your Email Below")
     v3 = dialog3.get_input()
     update_variables(v3)
-    save_variables("data.json", data_to_save())
+    save_variables()
     # Update the text of the b3
     if v3 != "":
         if len(v3) <= 24:
@@ -912,7 +948,7 @@ def passshow():
         switch_v_pass1 = "off"
         label_below_b2.configure(text=v2)
     update_variables(switch_v_pass1)
-    save_variables("data.json", data_to_save())
+    save_variables()
 
 
 label22_main = customtkinter.CTkLabel(
@@ -957,7 +993,7 @@ def sub1():
         frame5.place(x=470, y=295)
         switch_v_sub1 = "on"
     update_variables(switch_v_sub1)
-    save_variables("data.json", data_to_save())
+    save_variables()
 
 
 def datew():
@@ -971,11 +1007,11 @@ def datew():
         switch_v_date1 = "off"
         entrybox1.delete(0, tk.END)  # Clear the text in EntryBox1
     update_variables(switch_v_date1)
-    save_variables("data.json", data_to_save())
+    save_variables()
 
 
 switch_v_sub = customtkinter.StringVar(value="on")
-switch_v_img = customtkinter.StringVar(value="on")
+switch_v_img = customtkinter.StringVar(value="off")
 
 switch1 = customtkinter.CTkSwitch(
     frame4,
@@ -997,8 +1033,18 @@ def toggle_switch():
     else:
         switch_v_img1 = "on"
     update_variables(switch_v_img1)
-    save_variables("data.json", data_to_save())
+    save_variables()
 
+
+def toggle_switch2():
+    global switch_v_img1
+    if switch_v_img1 == "off":
+        switch_v_img.set("off")
+    else:
+        switch_v_img.set("on")
+
+
+toggle_switch2()
 
 switch2 = customtkinter.CTkSwitch(
     frame4,
@@ -1380,9 +1426,12 @@ def saveimg():
         if p2 == "Set Address":
             showlist()
             if len(file_addresses) != 0:
-                destinationfol = filedialog.askdirectory()
                 try:
+                    if not advmail.check_all_pdfs(file_addresses):
+                        return
+                    destinationfol = filedialog.askdirectory()
                     advmail.convert_all_pdfs(file_addresses, destinationfol, dpi1)
+
                     msg = CTkMessagebox.CTkMessagebox(
                         title="Done",
                         message="Successfully Converted",
@@ -1410,8 +1459,10 @@ def saveimg():
                 return
         elif p2 == "Browse Files":
             if len(file_paths) != 0:
-                destinationfol = filedialog.askdirectory()
                 try:
+                    if not advmail.check_all_pdfs(file_paths):
+                        return
+                    destinationfol = filedialog.askdirectory()
                     advmail.convert_all_pdfs(file_paths, destinationfol, dpi1)
                     msg = CTkMessagebox.CTkMessagebox(
                         title="Done",
@@ -1525,7 +1576,7 @@ def dele1():
     else:
         switch_v_del11 = "on"
     update_variables(switch_v_del11)
-    save_variables("data.json", data_to_save())
+    save_variables()
 
 
 switch_v_del1 = customtkinter.StringVar(value="on")
@@ -1588,17 +1639,32 @@ def on_closing():
     if entrybox2.get() != "":
         addre1 = entrybox2.get()
         update_variables(addre1)
-        save_variables("data.json", data_to_save())
+        save_variables()
     if combox1.get() != "":
         recname1 = combox1.get()
         print(recname1)
     update_variables(recname1)
-    save_variables("data.json", data_to_save())
+    save_variables()
     root.destroy()
 
 
 # Bind the close event to the on_closing function
 root.protocol("WM_DELETE_WINDOW", on_closing)
+
+
+# Apply saved theme colors
+if theme_color:
+    choose_color_button_load(theme_color)
+if theme_color16:
+    choose_color_button16_load(theme_color16)
+if theme_color2:
+    choose_color_menu15_load(theme_color2)
+if theme_colorh:
+    choose_color_hover_load(theme_colorh)
+
+# Restore DPI
+entrybox20.delete(0, tk.END)
+entrybox20.insert(0, var4dpi)
 
 
 root.mainloop()

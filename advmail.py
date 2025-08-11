@@ -9,7 +9,7 @@ It handles:
 - Internet and credentials checks
 - Background threading and cleanup utilities
 
-Used internally by GUImain_app.py to power file processing and email features.\n
+Used internally by GUImain_app.py to power file processing and email features.
 For more detail visit https://github.com/Utkarsh-X/EmailFlow
 """
 
@@ -18,7 +18,6 @@ import os
 import shutil
 import subprocess
 import threading
-from datetime import date
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -31,9 +30,7 @@ from send2trash import send2trash
 from pdf2image import convert_from_path
 
 # === Tkinter & GUI Libraries ===
-import tkinter as tk
-from tkinter import colorchooser, filedialog
-import customtkinter
+from tkinter import filedialog
 import CTkMessagebox
 
 
@@ -184,6 +181,24 @@ temp_image_folderloc = None
 folder_creation_event = threading.Event()
 
 
+def check_all_pdfs(file_list):
+    # Remove non-PDFs from file_list and return False only if no PDFs remain.
+    original_length = len(file_list)
+
+    # Keep only PDFs
+    file_list[:] = [f for f in file_list if f.lower().endswith(".pdf")]
+
+    if len(file_list) == 0:
+        CTkMessagebox.CTkMessagebox(
+            title="Reminder",
+            message="Only PDF files can be converted to images.",
+            option_1="Ok",
+        )
+        return False
+    else:
+        return True
+
+
 def create_folder():
     global temp_image_folderloc
 
@@ -256,6 +271,8 @@ def check_credentials(sender_email, password):
         print("\033[32mCredentials are correct.\033[0m")
         return True
     except Exception as e:
+        if not check_internet_connection():
+            return
         print(f"Invalid credentials. Error: {e}")
         CTkMessagebox.CTkMessagebox(
             title="Error",
@@ -266,8 +283,10 @@ def check_credentials(sender_email, password):
 
 
 def openfol(directory_path):
-    directory_path = directory_path.replace("\\", "\\\\")
+    # Normalize path to avoid slash issues
+    directory_path = os.path.normpath(directory_path)
+
     if os.path.exists(directory_path) and os.path.isdir(directory_path):
-        subprocess.Popen(f'explorer "{directory_path}"')
+        subprocess.Popen(["explorer", directory_path])
     else:
         print("The specified path does not exist or is not a directory.")
