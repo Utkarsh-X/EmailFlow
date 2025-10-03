@@ -48,53 +48,76 @@ def get_data_path():
 
 # Load default values into globals
 def var_load():
-    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh
-    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11
+    global mode, var4dpi, v2, v3, primary_color, secondary_color, menu_color, hover_color
+    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del1
     global addre1, recname1
 
+    mode = "light"  # default mode if no settings exist
     var4dpi = "300"
     v2 = ""
     v3 = ""
-    theme_color = ""
-    theme_color16 = ""
-    theme_color2 = ""
-    theme_colorh = ""
+    primary_color = ""
+    secondary_color = ""
+    menu_color = ""
+    hover_color = ""
     switch_v_pass1 = "off"
     list1 = [""]
     switch_v_date1 = "on"
     switch_v_sub1 = "on"
     switch_v_img1 = "off"
-    switch_v_del11 = "on"
+    switch_v_del1 = "on"
     addre1 = ""
     recname1 = ""
+
+
+def encrypt(text: str, shift: int = 3) -> str:
+    """Encrypt the text by shifting characters forward."""
+    encrypted = ""
+    for char in text:
+        encrypted += chr((ord(char) + shift) % 256)  # wrap around byte range
+    return encrypted
+
+
+def decrypt(text: str, shift: int = 3) -> str:
+    """Decrypt the text by shifting characters backward."""
+    decrypted = ""
+    for char in text:
+        decrypted += chr((ord(char) - shift) % 256)
+    return decrypted
 
 
 # Load variable values from data.json
 def load_variables():
 
     filename = get_data_path()
-    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh
-    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11
+    global mode, var4dpi, v2, v3, primary_color, secondary_color, menu_color, hover_color
+    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del1
     global addre1, recname1
 
     try:
         with open(filename, "r") as file:
             data = json.load(file)
+            mode = data.get("mode", mode)
+            # Apply the loaded theme mode
+            customtkinter.set_appearance_mode(mode)
             var4dpi = data.get("var4dpi", var4dpi)
             v2 = data.get("v2", v2)
             v3 = data.get("v3", v3)
-            theme_color = data.get("theme_color", theme_color)
-            theme_color16 = data.get("theme_color16", theme_color16)
-            theme_color2 = data.get("theme_color2", theme_color2)
-            theme_colorh = data.get("theme_colorh", theme_colorh)
+            primary_color = data.get("primary_color", primary_color)
+            secondary_color = data.get("secondary_color", secondary_color)
+            menu_color = data.get("menu_color", menu_color)
+            hover_color = data.get("hover_color", hover_color)
             switch_v_pass1 = data.get("switch_v_pass1", switch_v_pass1)
             list1 = data.get("list1", list1)
             switch_v_date1 = data.get("switch_v_date1", switch_v_date1)
             switch_v_sub1 = data.get("switch_v_sub1", switch_v_sub1)
             switch_v_img1 = data.get("switch_v_img1", switch_v_img1)
-            switch_v_del11 = data.get("switch_v_del11", switch_v_del11)
+            switch_v_del1 = data.get("switch_v_del1", switch_v_del1)
             addre1 = data.get("addre1", addre1)
             recname1 = data.get("recname1", recname1)
+            # Only decrypt v2 if it has a value
+            if v2:
+                v2 = decrypt(v2, shift=5)
     except FileNotFoundError:
         print(f"{filename} not found. Using default values.")
     except json.JSONDecodeError:
@@ -107,24 +130,26 @@ load_variables()  # Load saved settings from data.json
 
 # Update specific global variables from a dictionary
 def update_variables(updates):
-    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh
-    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11
+    global mode, var4dpi, v2, v3, primary_color, secondary_color, menu_color, hover_color
+    global switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del1
     global addre1, recname1
 
+    if "mode" in updates:
+        mode = updates["mode"]
     if "var4dpi" in updates:
         var4dpi = updates["var4dpi"]
     if "v2" in updates:
         v2 = updates["v2"]
     if "v3" in updates:
         v3 = updates["v3"]
-    if "theme_color" in updates:
-        theme_color = updates["theme_color"]
-    if "theme_color16" in updates:
-        theme_color16 = updates["theme_color16"]
-    if "theme_color2" in updates:
-        theme_color2 = updates["theme_color2"]
-    if "theme_colorh" in updates:
-        theme_colorh = updates["theme_colorh"]
+    if "primary_color" in updates:
+        primary_color = updates["primary_color"]
+    if "secondary_color" in updates:
+        secondary_color = updates["secondary_color"]
+    if "menu_color" in updates:
+        menu_color = updates["menu_color"]
+    if "hover_color" in updates:
+        hover_color = updates["hover_color"]
     if "switch_v_pass1" in updates:
         switch_v_pass1 = updates["switch_v_pass1"]
     if "list1" in updates:
@@ -135,8 +160,8 @@ def update_variables(updates):
         switch_v_sub1 = updates["switch_v_sub1"]
     if "switch_v_img1" in updates:
         switch_v_img1 = updates["switch_v_img1"]
-    if "switch_v_del11" in updates:
-        switch_v_del11 = updates["switch_v_del11"]
+    if "switch_v_del1" in updates:
+        switch_v_del1 = updates["switch_v_del1"]
     if "addre1" in updates:
         addre1 = updates["addre1"]
     if "recname1" in updates:
@@ -145,20 +170,33 @@ def update_variables(updates):
 
 # Convert current state to dictionary
 def data_to_save():
+    # Handle StringVar objects by getting their values
+    global switch_v_del1
+    try:
+        del1_value = (
+            switch_v_del1.get() if hasattr(switch_v_del1, "get") else switch_v_del1
+        )
+    except:
+        del1_value = "on"  # Default value if there's an error
+
+    # Encrypt password before saving
+    encrypted_password = encrypt(v2, shift=5) if v2 else ""
+
     return {
+        "mode": mode,
         "var4dpi": var4dpi,
-        "v2": v2,
+        "v2": encrypted_password,
         "v3": v3,
-        "theme_color": theme_color,
-        "theme_color16": theme_color16,
-        "theme_color2": theme_color2,
-        "theme_colorh": theme_colorh,
+        "primary_color": primary_color,
+        "secondary_color": secondary_color,
+        "menu_color": menu_color,
+        "hover_color": hover_color,
         "switch_v_pass1": switch_v_pass1,
         "list1": list1,
         "switch_v_date1": switch_v_date1,
         "switch_v_sub1": switch_v_sub1,
         "switch_v_img1": switch_v_img1,
-        "switch_v_del11": switch_v_del11,
+        "switch_v_del1": del1_value,
         "addre1": addre1,
         "recname1": recname1,
     }
@@ -179,7 +217,7 @@ def resource_path(relative_path: str) -> str:
     return os.path.join(base_path, relative_path)
 
 
-customtkinter.set_appearance_mode("light")
+# Theme and color settings will be applied after loading from data.json
 customtkinter.set_default_color_theme("green")
 root = customtkinter.CTk()
 root.minsize(500, 500)
@@ -223,17 +261,17 @@ def apply1():
 
 
 def choose_color_button():
-    global theme_color
+    global primary_color
     color_code = colorchooser.askcolor(title="Choose color")[1]
     if color_code:
-        theme_color = color_code
-        update_variables(theme_color)
+        primary_color = color_code
+        update_variables(primary_color)
         save_variables()
-        choose_color_button_load(theme_color)
+        choose_color_button_load(primary_color)
 
 
-def choose_color_button_load(theme_color):
-    global widgets
+def choose_color_button_load(primary_color):
+    # List of permanent widgets that should be styled
     widgets = [
         menu_button,
         bs1,
@@ -250,58 +288,62 @@ def choose_color_button_load(theme_color):
         b4,
         b5,
     ]
-    for widget in widgets:
-        widget.configure(fg_color=theme_color)
-    segmented_button.configure(selected_color=theme_color)
 
+    # Configure permanent widgets
+    for widget in widgets:
+        widget.configure(fg_color=primary_color)
+    segmented_button.configure(selected_color=primary_color)
+
+    # Configure switches
     switches = [switch1, switch2, switch3, switch4, switch6]
     for switch in switches:
-        switch.configure(progress_color=theme_color)
+        switch.configure(progress_color=primary_color)
 
 
 def choose_color_button16():
-    global theme_color16
+    global secondary_color
     color_code1 = colorchooser.askcolor(title="Choose color")[1]
     if color_code1:
-        theme_color16 = color_code1
-        update_variables(theme_color16)
+        secondary_color = color_code1
+        update_variables(secondary_color)
         save_variables()
-        choose_color_button16_load(theme_color16)
+        choose_color_button16_load(secondary_color)
 
 
-def choose_color_button16_load(theme_color16):
+def choose_color_button16_load(secondary_color):
     global widgets1
     widgets1 = [b6, b7, b65]
     for widget in widgets1:
-        widget.configure(fg_color=theme_color16)
+        widget.configure(fg_color=secondary_color)
 
 
 def choose_color_menu15():
-    global theme_color2
+    global menu_color
     color_code2 = colorchooser.askcolor(title="Choose color")[1]
     if color_code2:
-        theme_color2 = color_code2
-        update_variables(theme_color2)
+        menu_color = color_code2
+        update_variables(menu_color)
         save_variables()
-        choose_color_menu15_load(theme_color2)
+        choose_color_menu15_load(menu_color)
 
 
-def choose_color_menu15_load(theme_color2):
-    menu_frame.configure(fg_color=theme_color2)
+def choose_color_menu15_load(menu_color):
+    menu_frame.configure(fg_color=menu_color)
 
 
 def choose_color_hover():
-    global theme_colorh
+    global hover_color
     color_code1 = colorchooser.askcolor(title="Choose color")[1]
     if color_code1:
-        theme_colorh = color_code1
-        update_variables(theme_colorh)
+        hover_color = color_code1
+        update_variables(hover_color)
         save_variables()
-        choose_color_hover_load(theme_colorh)
+        choose_color_hover_load(hover_color)
 
 
-def choose_color_hover_load(theme_colorh):
-    segmented_button.configure(selected_hover_color=theme_colorh)
+def choose_color_hover_load(hover_color):
+    segmented_button.configure(selected_hover_color=hover_color)
+    # List of permanent widgets that should receive hover color
     widgets = [
         b6,
         b7,
@@ -325,26 +367,28 @@ def choose_color_hover_load(theme_colorh):
         theme16,
         theme2,
     ]
+
+    # Configure hover color for permanent widgets
     for widget in widgets:
-        widget.configure(hover_color=theme_colorh)
+        widget.configure(hover_color=hover_color)
 
 
 def default_color():
-    global theme_color, theme_color16, theme_color2, theme_colorh
+    global primary_color, secondary_color, menu_color, hover_color
 
-    if not any([theme_color, theme_color16, theme_color2, theme_colorh]):
+    if not any([primary_color, secondary_color, menu_color, hover_color]):
         return
-    theme_color = ""
-    theme_color16 = ""
-    theme_color2 = ""
-    theme_colorh = ""
+    primary_color = ""
+    secondary_color = ""
+    menu_color = ""
+    hover_color = ""
 
     update_variables(
         {
-            "theme_color": theme_color,
-            "theme_color16": theme_color16,
-            "theme_color2": theme_color2,
-            "theme_colorh": theme_colorh,
+            "primary_color": primary_color,
+            "secondary_color": secondary_color,
+            "menu_color": menu_color,
+            "hover_color": hover_color,
         }
     )
 
@@ -468,17 +512,18 @@ warnings.simplefilter("ignore", category=DeprecationWarning)
 
 imaphoto1 = ImageTk.PhotoImage(
     Image.open(resource_path(os.path.join("assets", "clicktolight.png"))).resize(
-        (21, 21), Image.ANTIALIAS
+        (21, 21), Image.Resampling.LANCZOS
     )
 )
 
 imaphoto2 = ImageTk.PhotoImage(
     Image.open(resource_path(os.path.join("assets", "clicktodark.png"))).resize(
-        (21, 21), Image.ANTIALIAS
+        (21, 21), Image.Resampling.LANCZOS
     )
 )
 
-mode = "light"
+# Initialize appearance based on current mode
+customtkinter.set_appearance_mode(mode)
 
 # Filter out Deprecation Warning and UserWarning
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -538,6 +583,9 @@ link_label = customtkinter.CTkLabel(
     fg_color=None,
     font=("Roboto", 17, "underline"),
 )
+if mode == "dark":
+    link_label.configure(text_color="lightblue")
+
 link_label.place(x=476 + para.winfo_width(), y=346)
 dev_label = customtkinter.CTkLabel(
     inframe91, text="Developed by Utkarsh-X", fg_color=None, font=("Roboto", 17)
@@ -611,20 +659,20 @@ frame16.pack(fill="x")
 
 
 def reset_app_settings():
-    global var4dpi, v2, v3, theme_color, theme_color16, theme_color2, theme_colorh, switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del11, addre1, recname1
+    global var4dpi, v2, v3, primary_color, secondary_color, menu_color, hover_color, switch_v_pass1, list1, switch_v_date1, switch_v_sub1, switch_v_img1, switch_v_del1, addre1, recname1
 
     var_load()
     for var in [
         v2,
         v3,
-        theme_color,
-        theme_color16,
-        theme_color2,
-        theme_colorh,
+        primary_color,
+        secondary_color,
+        menu_color,
+        hover_color,
         switch_v_pass1,
         switch_v_date1,
         switch_v_img1,
-        switch_v_del11,
+        switch_v_del1,
         list1,
         addre1,
         recname1,
@@ -799,9 +847,35 @@ combox1.pack(side="left", padx=10)
 
 
 def input():
-    dialog = customtkinter.CTkInputDialog(text="Enter the Email Below")
+    global dialog, list1, primary_color, hover_color
+
+    # Handle all possible color combinations
+    if primary_color and hover_color:
+        dialog = customtkinter.CTkInputDialog(
+            title="Add New Email",
+            text="Enter the Email Below",
+            button_fg_color=primary_color,
+            button_hover_color=hover_color,
+        )
+    elif primary_color:
+        dialog = customtkinter.CTkInputDialog(
+            title="Add New Email",
+            text="Enter the Email Below",
+            button_fg_color=primary_color,
+        )
+    elif hover_color:
+        dialog = customtkinter.CTkInputDialog(
+            title="Add New Email",
+            text="Enter the Email Below",
+            button_hover_color=hover_color,
+        )
+    else:
+        dialog = customtkinter.CTkInputDialog(
+            title="Add New Email", text="Enter the Email Below"
+        )
+    dialog.iconbitmap(resource_path(os.path.join("assets", "emailL.ico")))
+
     val22 = dialog.get_input()
-    global list1
     if val22 != "":
         list1 = list1 + [val22]
         update_variables(list1)
@@ -858,10 +932,37 @@ frame_b2.pack(side="left", padx=10)
 
 
 def input2():
-    global v2
-    dialog2 = customtkinter.CTkInputDialog(text="Enter the Password Below")
-    v2 = dialog2.get_input()
-    update_variables(v2)
+    global v2, dialog2, primary_color, hover_color
+
+    # Handle all possible color combinations
+    if primary_color and hover_color:
+        dialog2 = customtkinter.CTkInputDialog(
+            title="Enter Password",
+            text="Enter the Password Below",
+            button_fg_color=primary_color,
+            button_hover_color=hover_color,
+        )
+    elif primary_color:
+        dialog2 = customtkinter.CTkInputDialog(
+            title="Enter Password",
+            text="Enter the Password Below",
+            button_fg_color=primary_color,
+        )
+    elif hover_color:
+        dialog2 = customtkinter.CTkInputDialog(
+            title="Enter Password",
+            text="Enter the Password Below",
+            button_hover_color=hover_color,
+        )
+    else:
+        dialog2 = customtkinter.CTkInputDialog(
+            title="Enter Password", text="Enter the Password Below"
+        )
+    dialog2.iconbitmap(resource_path(os.path.join("assets", "emailL.ico")))
+
+    raw_password = dialog2.get_input()
+    v2 = raw_password
+    update_variables({"v2": raw_password})
     save_variables()
     # Update the text of the b2
 
@@ -895,8 +996,34 @@ label_below_b2.pack(side="top", padx=10)
 
 
 def input3():
-    global v3
-    dialog3 = customtkinter.CTkInputDialog(text="Enter Sender/Your Email Below")
+    global v3, dialog3, primary_color, hover_color
+
+    # Handle all possible color combinations
+    if primary_color and hover_color:
+        dialog3 = customtkinter.CTkInputDialog(
+            title="Sender Email Setup",
+            text="Enter Sender/Your Email Below",
+            button_fg_color=primary_color,
+            button_hover_color=hover_color,
+        )
+    elif primary_color:
+        dialog3 = customtkinter.CTkInputDialog(
+            title="Sender Email Setup",
+            text="Enter Sender/Your Email Below",
+            button_fg_color=primary_color,
+        )
+    elif hover_color:
+        dialog3 = customtkinter.CTkInputDialog(
+            title="Sender Email Setup",
+            text="Enter Sender/Your Email Below",
+            button_hover_color=hover_color,
+        )
+    else:
+        dialog3 = customtkinter.CTkInputDialog(
+            title="Sender Email Setup", text="Enter Sender/Your Email Below"
+        )
+    dialog3.iconbitmap(resource_path(os.path.join("assets", "emailL.ico")))
+
     v3 = dialog3.get_input()
     update_variables(v3)
     save_variables()
@@ -1570,12 +1697,12 @@ b7.pack(anchor="e", side="left", padx=(50, 10), pady=10)
 
 
 def dele1():
-    global switch_v_del11
+    global switch_v_del1
     if switch_v_del1.get() == "off":
-        switch_v_del11 = "off"
+        switch_v_del1 = "off"
     else:
-        switch_v_del11 = "on"
-    update_variables(switch_v_del11)
+        switch_v_del1 = "on"
+    update_variables(switch_v_del1)
     save_variables()
 
 
@@ -1593,7 +1720,7 @@ switch4 = customtkinter.CTkSwitch(
 switch4.pack(side="top", padx=(24, 23), pady=10)
 
 
-if switch_v_del11 == "off":
+if switch_v_del1 == "off":
     switch4.deselect()
     dele1()
 
@@ -1621,17 +1748,20 @@ if switch_v_pass1 == "on":
 if var4dpi != 0:
     entrybox20.insert(0, f"{var4dpi}")
 
-if theme_color != "":
-    choose_color_button_load(theme_color)
+if mode != "light":
+    customtkinter.set_appearance_mode("dark")
 
-if theme_color16 != "":
-    choose_color_button16_load(theme_color16)
+if primary_color != "":
+    choose_color_button_load(primary_color)
 
-if theme_color2 != "":
-    choose_color_menu15_load(theme_color2)
+if secondary_color != "":
+    choose_color_button16_load(secondary_color)
 
-if theme_colorh != "":
-    choose_color_hover_load(theme_colorh)
+if menu_color != "":
+    choose_color_menu15_load(menu_color)
+
+if hover_color != "":
+    choose_color_hover_load(hover_color)
 
 
 def on_closing():
@@ -1653,14 +1783,14 @@ root.protocol("WM_DELETE_WINDOW", on_closing)
 
 
 # Apply saved theme colors
-if theme_color:
-    choose_color_button_load(theme_color)
-if theme_color16:
-    choose_color_button16_load(theme_color16)
-if theme_color2:
-    choose_color_menu15_load(theme_color2)
-if theme_colorh:
-    choose_color_hover_load(theme_colorh)
+if primary_color:
+    choose_color_button_load(primary_color)
+if secondary_color:
+    choose_color_button16_load(secondary_color)
+if menu_color:
+    choose_color_menu15_load(menu_color)
+if hover_color:
+    choose_color_hover_load(hover_color)
 
 # Restore DPI
 entrybox20.delete(0, tk.END)
